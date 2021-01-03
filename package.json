@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "license": "AGPLv3",
   "author": "Tai",
-  "dependencies": {},
+  "dependencies": {
+    "openzeppelin-solidity": "^3.3.0"
+  },
   "devDependencies": {
     "@openzeppelin/contracts": "^3.0.0",
     "@truffle/hdwallet-provider": "^1.0.36",
