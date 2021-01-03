@@ -9,9 +9,11 @@ const { BigNumber, utils } = require("ethers")
 const BN = require('bn.js');
 
 let exploit = artifacts.require("Exploit")
+let flashLoan = artifacts.require("FlashLoan")
 
 let aaveABI = require("../interfaces/Aave.json")
 let wethABI = require("../interfaces/WETH.json")
+let tokenABI = require("../interfaces/erc20.json")
 // let uniswapABI = require('../abi/uniswapRouter.json');
 // let tokenABI = require("../abi/erc20.json")
 // let wethABI = require("../abi/WETH.json")
@@ -120,8 +122,10 @@ contract("Exploit Testing", () => {
 
     let aave;
     let aaveAdd = "0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9"
-    let WETHAdd = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
     let WETH;
+    let WETHAdd = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+    let usdt;
+    let usdtAdd = "0xdac17f958d2ee523a2206206994597c13d831ec7"
     let accounts;
 
     before(async () => {
@@ -134,12 +138,15 @@ contract("Exploit Testing", () => {
         WETH.setProvider(provider);
         WETH = await WETH.at(WETHAdd)
 
+        usdt = truffleContract({ abi: tokenABI });
+        usdt.setProvider(provider);
+        usdt = await usdt.at(usdtAdd)
+
+
         exploit = await exploit.deployed()    
+        flashLoan = await flashLoan.deployed()
 
         accounts = await web3.eth.getAccounts()
-        accounts[0] = '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1';
-
-
     })
 
     it("should deposit weth to exploit contract", async() =>{
@@ -148,11 +155,19 @@ contract("Exploit Testing", () => {
         await WETH.transfer(exploit.address, toBaseUnit("1000", 18), {from:accounts[0]});
     })
 
-    it("asc", async ()=>{
+    it("exploit test", async ()=>{
         let beforeWethBal = await WETH.balanceOf(exploit.address)
         console.log({
             beforeWethBal: parseBaseUnit(beforeWethBal, "18")
         })
-        await exploit.myFlashLoanCall()
+        await exploit.myFlashLoanCall(WETH.address, toBaseUnit("100", 18))
+    })
+
+    it("flashloan test", async ()=>{
+        let beforeWethBal = await WETH.balanceOf(flashLoan.address)
+        console.log({
+            beforeWethBal: parseBaseUnit(beforeWethBal, "18")
+        })
+        await flashLoan.flashLoan(WETH.address, toBaseUnit("100", 18), usdt.address)
     })
 })
